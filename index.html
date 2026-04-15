@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MacBook Pro Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+       body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    cursor: url('https://cur.cursors-4u.net/mac/mac-1/mac3.cur'), auto;
+}
+        body.light-mode {
+            background: #f5f5f7;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(180deg, #0a1628 0%, #1a2a4a 25%, #2a3a5a 50%, #1a2a4a 75%, #0a1628 100%);
+        }
+
+        /* LOCK SCREEN */
+        .lock-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 999999;
+            padding: 60px 0;
+            background: linear-gradient(180deg, #0a1628 0%, #1a2a4a 25%, #2a3a5a 50%, #1a2a4a 75%, #0a1628 100%);
+        }
+
+        .lock-screen.hidden {
+            display: none;
+        }
+
+        .lock-top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 100px;
+        }
+
+        .lock-date {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .lock-time {
+            font-size: 100px;
+            font-weight: 300;
+            color: white;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .lock-bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 80px;
+        }
+
+        .lock-user-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .lock-username {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        #passwordInput {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            color: white;
+            font-size: 15px;
+            padding: 10px 16px;
+            width: 200px;
+            outline: none;
+            letter-spacing: 2px;
+            font-family: 'SF Mono', Menlo, monospace;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        #passwordInput::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .lock-hint {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .password-error {
+            color: #ff453a;
+            font-size: 12px;
+            opacity: 0;
+            height: 16px;
+            transition: opacity 0.3s;
+        }
+
+        .password-error.show {
+            opacity: 1;
+        }
+
+        /* MENU BAR */
+        .menu-bar {
+            height: 24px;
+            background: rgba(15, 15, 25, 0.75);
+            backdrop-filter: blur(50px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: none;
+            align-items: center;
+            padding: 0 16px;
+            color: #f5f5f7;
+            font-size: 12px;
+            z-index: 10000;
+        }
+
+        .menu-bar.visible {
+            display: flex;
+        }
+
+        body.light-mode .menu-bar {
+            background: rgba(245, 245, 247, 0.75);
+            color: #1d1d1f;
+            border-bottom-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .menu-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .menu-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* DESKTOP */
+        .desktop {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: none;
+        }
+
+        .desktop.visible {
+            display: flex;
+        }
+
+        /* DOCK */
+        .dock {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 15, 25, 0.5);
+            backdrop-filter: blur(40px);
+            border-radius: 20px;
+            padding: 8px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 5000;
+        }
+
+        body.light-mode .dock {
+            background: rgba(245, 245, 247, 0.5);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .dock-item {
+            width: 52px;
+            height: 52px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 26px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        body.light-mode .dock-item {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .dock-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.15);
+        }
+
+        body.light-mode .dock-item:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .dock-item.active::before {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            width: 6px;
+            height: 6px;
+            background: #f5f5f7;
+            border-radius: 50%;
+        }
+
+        body.light-mode .dock-item.active::before {
+            background: #1d1d1f;
+        }
+
+        /* WINDOWS */
+        .window {
+            position: absolute;
+            min-width: 600px;
+            min-height: 400px;
+            background: rgba(245, 245, 247, 0.98);
+            border-radius: 12px;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            overflow: hidden;
+            z-index: 1000;
+            animation: windowEnter 0.5s forwards;
+        }
+
+        body.dark-mode .window {
+            background: rgba(30, 30, 35, 0.98);
+            color: #f5f5f7;
+        }
+
+        @keyframes windowEnter {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .window-header {
+            height: 36px;
+            background: linear-gradient(to bottom, rgba(250, 250, 250, 1), rgba(240, 240, 245, 1));
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            padding: 0 14px;
+            gap: 8px;
+            user-select: none;
+            cursor: grab;
+        }
+
+        body.dark-mode .window-header {
+            background: linear-gradient(to bottom, rgba(50, 50, 55, 1), rgba(40, 40, 45, 1));
+            border-bottom-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .window-control {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .window-control:hover {
+            opacity: 1;
+        }
+
+        .window-control.close {
+            background: #ff5f56;
+        }
+
+        .window-control.minimize {
+            background: #ffbd2e;
+        }
+
+        .window-control.fullscreen {
+            background: #27c93f;
+        }
+
+        .window-title {
+            flex: 1;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        body.dark-mode .window-title {
+            color: #f5f5f7;
+        }
+
+        .window-content {
+            flex: 1;
+            overflow: auto;
+            background: #f5f5f7;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.dark-mode .window-content {
+            background: #2a2a2f;
+            color: #f5f5f7;
+        }
+
+        /* SAFARI */
+        .safari-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .safari-toolbar {
+            height: 44px;
+            background: linear-gradient(to bottom, #f8f8f8, #f0f0f0);
+            border-bottom: 1px solid #d8d8d8;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        body.dark-mode .safari-toolbar {
+            background: linear-gradient(to bottom, #3a3a3f, #2a2a2f);
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .safari-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body.dark-mode .safari-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #f5f5f7;
+        }
+
+        .safari-btn:hover {
+            background: rgba(0, 0, 0, 0.12);
+        }
+
+        body.dark-mode .safari-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .safari-url-bar {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            font-size: 12px;
+            outline: none;
+            color: #333;
+        }
+
+        body.dark-mode .safari-url-bar {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #f5f5f7;
+        }
+
+        .safari-url-bar:focus {
+            background: white;
+            border-color: #667eea;
+        }
+
+        body.dark-mode .safari-url-bar:focus {
+            background: #3a3a3f;
+            border-color: #667eea;
+        }
+
+        .safari-webpage {
+            flex: 1;
+            overflow-y: auto;
+            background: white;
+            padding: 40px;
+        }
+
+        body.dark-mode .safari-webpage {
+            background: #1a1a1f;
+            color: #f5f5f7;
+        }
+
+        .safari-webpage h1 {
+            color: #1d1d1f;
+            font-size: 36px;
+            margin-bottom: 24px;
+        }
+
+        body.dark-mode .safari-webpage h1 {
+            color: #f5f5f7;
+        }
+
+        .safari-webpage h2 {
+            color: #1d1d1f;
+            font-size: 24px;
+            margin-top: 32px;
+            margin-bottom: 16px;
+        }
+
+        body.dark-mode .safari-webpage h2 {
+            color: #f5f5f7;
+        }
+
+        .safari-webpage p {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 16px;
+            font-size: 15px;
+        }
+
+        body.dark-mode .safari-webpage p {
+            color: #ccc;
+        }
+
+        .safari-webpage a {
+            color: #0a84ff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .safari-webpage a:hover {
+            text-decoration: underline;
+        }
+
+        .safari-webpage ul, .safari-webpage ol {
+            list-style-position: inside;
+            padding-left: 20px;
+        }
+
+        .safari-webpage li {
+            color: #555;
+            line-height: 2;
+            font-size: 15px;
+        }
+
+        body.dark-mode .safari-webpage li {
+            color: #ccc;
+        }
+
+        .google-results {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .google-result {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .google-result:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        body.dark-mode .google-result:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .result-url {
+            color: #006621;
+            font-size: 13px;
+        }
+
+        body.dark-mode .result-url {
+            color: #34c759;
+        }
+
+        .result-title {
+            color: #1d1d1f;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        body.dark-mode .result-title {
+            color: #f5f5f7;
+        }
+
+        .result-description {
+            color: #555;
+            font-size: 14px;
+        }
+
+        body.dark-mode .result-description {
+            color: #aaa;
+        }
+
+        /* NOTES APP */
+        .notes-container {
+            display: flex;
+            height: 100%;
+        }
+
+        .notes-sidebar {
+            width: 250px;
+            background: #f5f5f7;
+            border-right: 1px solid #d8d8d8;
+            overflow-y: auto;
+            padding: 16px 0;
+        }
+
+        body.dark-mode .notes-sidebar {
+            background: #2a2a2f;
+            border-right-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .notes-list {
+            list-style: none;
+        }
+
+        .notes-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .notes-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        body.dark-mode .notes-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .notes-item.active {
+            background: #e8e8ed;
+            border-left-color: #667eea;
+        }
+
+        body.dark-mode .notes-item.active {
+            background: #3a3a3f;
+            border-left-color: #667eea;
+        }
+
+        .notes-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .notes-title-input {
+            font-size: 20px;
+            font-weight: 600;
+            border: none;
+            outline: none;
+            margin-bottom: 20px;
+            background: transparent;
+            color: #1d1d1f;
+        }
+
+        body.dark-mode .notes-title-input {
+            color: #f5f5f7;
+        }
+
+        .notes-content textarea {
+            flex: 1;
+            border: none;
+            outline: none;
+            resize: none;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 15px;
+            background: transparent;
+            color: #1d1d1f;
+        }
+
+        body.dark-mode .notes-content textarea {
+            color: #f5f5f7;
+        }
+
+        /* MAIL APP */
+        .mail-container {
+            display: flex;
+            height: 100%;
+        }
+
+        .mail-sidebar {
+            width: 200px;
+            background: #f5f5f7;
+            border-right: 1px solid #d8d8d8;
+            padding: 16px 0;
+            overflow-y: auto;
+        }
+
+        body.dark-mode .mail-sidebar {
+            background: #2a2a2f;
+            border-right-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .mail-folders {
+            list-style: none;
+        }
+
+        .mail-folder {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .mail-folder:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        body.dark-mode .mail-folder:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .mail-folder.active {
+            background: #e8e8ed;
+        }
+
+        body.dark-mode .mail-folder.active {
+            background: #3a3a3f;
+        }
+
+        .mail-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .mail-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .mail-item {
+            padding: 12px;
+            background: #f5f5f7;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        body.dark-mode .mail-item {
+            background: #3a3a3f;
+        }
+
+        .mail-item:hover {
+            background: #e8e8ed;
+        }
+
+        body.dark-mode .mail-item:hover {
+            background: #4a4a4f;
+        }
+
+        .mail-from {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .mail-subject {
+            font-size: 12px;
+            margin-top: 4px;
+            opacity: 0.8;
+        }
+
+        .mail-compose-btn {
+            padding: 12px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .mail-compose-btn:hover {
+            background: #5568d3;
+        }
+
+        .mail-compose-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+        }
+
+        .mail-compose-modal.show {
+            display: flex;
+        }
+
+        .mail-compose-box {
+            background: white;
+            border-radius: 12px;
+            width: 500px;
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark-mode .mail-compose-box {
+            background: #2a2a2f;
+        }
+
+        .mail-compose-box input,
+        .mail-compose-box textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #d8d8d8;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        body.dark-mode .mail-compose-box input,
+        body.dark-mode .mail-compose-box textarea {
+            background: #3a3a3f;
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #f5f5f7;
+        }
+
+        .mail-compose-box textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .mail-compose-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .mail-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .mail-btn-send {
+            background: #667eea;
+            color: white;
+        }
+
+        .mail-btn-send:hover {
+            background: #5568d3;
+        }
+
+        .mail-btn-cancel {
+            background: #e8e8ed;
+            color: #1d1d1f;
+        }
+
+        body.dark-mode .mail-btn-cancel {
+            background: #3a3a3f;
+            color: #f5f5f7;
+        }
+
+        .mail-btn-cancel:hover {
+            background: #d8d8dd;
+        }
+
+        body.dark-mode .mail-btn-cancel:hover {
+            background: #4a4a4f;
+        }
+
+        /* MESSAGES APP */
+        .messages-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .messages-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 16px;
+            max-width: 60%;
+            word-wrap: break-word;
+        }
+
+        .message.sent {
+            background: #667eea;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .message.received {
+            background: #e8e8ed;
+            color: #1d1d1f;
+            align-self: flex-start;
+        }
+
+        body.dark-mode .message.received {
+            background: #3a3a3f;
+            color: #f5f5f7;
+        }
+
+        .messages-input {
+            padding: 16px;
+            border-top: 1px solid #d8d8d8;
+            display: flex;
+            gap: 12px;
+        }
+
+        body.dark-mode .messages-input {
+            border-top-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .messages-input input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #d8d8d8;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        body.dark-mode .messages-input input {
+            background: #3a3a3f;
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #f5f5f7;
+        }
+
+        .messages-input button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .messages-input button:hover {
+            background: #5568d3;
+        }
+
+        /* SETTINGS APP */
+        .settings-container {
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .settings-section {
+            margin-bottom: 40px;
+        }
+
+        .settings-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1d1d1f;
+        }
+
+        body.dark-mode .settings-title {
+            color: #f5f5f7;
+        }
+
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #d8d8d8;
+        }
+
+        body.dark-mode .settings-item {
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-label {
+            font-size: 16px;
+            color: #1d1d1f;
+        }
+
+        body.dark-mode .settings-label {
+            color: #f5f5f7;
+        }
+
+        .settings-control {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .toggle-switch {
+            width: 50px;
+            height: 28px;
+            background: #d8d8d8;
+            border-radius: 14px;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.3s;
+            border: none;
+        }
+
+        .toggle-switch.active {
+            background: #34c759;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 24px;
+        }
+
+        .password-change-input {
+            padding: 10px 12px;
+            border: 1px solid #d8d8d8;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        body.dark-mode .password-change-input {
+            background: #3a3a3f;
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #f5f5f7;
+        }
+
+        .btn-primary {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .notification {
+            position: fixed;
+            top: 50px;
+            right: 20px;
+            background: rgba(15, 15, 25, 0.95);
+            color: #f5f5f7;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 13px;
+            z-index: 99999;
+            animation: slideIn 0.4s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        body.dark-mode ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        body.dark-mode ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+        .wallpaper {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    z-index: 0;
+    .desktop > *:not(.wallpaper) {
+    position: relative;
+    z-index: 1;
+}
+    transition: opacity 0.5s;
+}
+    </style>
+</head>
+
+<body class="dark-mode">
+
+<div id="appleMenu" style="
+    position:absolute;
+    top:24px;
+    left:10px;
+    background:rgba(30,30,35,0.95);
+    backdrop-filter: blur(20px);
+    border-radius:10px;
+    padding:10px;
+    display:none;
+    z-index:9999;
+">
+    <div onclick="showNotification('Acerca de este Mac')">Acerca de este Mac</div>
+    <div onclick="location.reload()">Reiniciar</div>
+    <div onclick="lockScreen.classList.remove('hidden')">Bloquear</div>
+</div>
+
+    <!-- LOCK SCREEN -->
+    <div class="lock-screen" id="lockScreen">
+        <div class="lock-top">
+            <div class="lock-date" id="lockDate">Wednesday, March 31</div>
+            <div class="lock-time" id="lockTime">14:30</div>
+        </div>
+
+        <div class="lock-bottom">
+            <div class="lock-user-avatar" id="userAvatar">👤</div>
+            <div class="lock-username" id="lockUsername">User</div>
+            <div class="password-error" id="passwordError">Contraseña incorrecta</div>
+            <input 
+                type="password" 
+                id="passwordInput" 
+                placeholder="Ingresa contraseña" 
+                autocomplete="off"
+            >
+            <div class="lock-hint" id="lockHint">Contraseña por defecto: 1234</div>
+        </div>
+    </div>
+
+    <!-- MENU BAR -->
+    <div class="menu-bar" id="menuBar">
+        <div class="menu-bar-left">
+<span onclick="toggleAppleMenu()">🍎</span>            <span id="appName">macOS</span>
+        </div>
+        <div class="menu-bar-right">
+            <span id="wifi">📶</span>
+            <span id="battery">🔋 100%</span>
+            <span id="time">14:30</span>
+        </div>
+    </div>
+
+    <!-- DESKTOP -->
+<div class="desktop" id="desktop">
+    <div class="wallpaper" id="wallpaper"></div>        <div class="dock" id="dock">
+            <div class="dock-item active" onclick="openApp('finder')">📁</div>
+            <div class="dock-item" onclick="openApp('safari')">🌐</div>
+            <div class="dock-item" onclick="openApp('messages')">💬</div>
+            <div class="dock-item" onclick="openApp('mail')">✉️</div>
+            <div class="dock-item" onclick="openApp('notes')">📝</div>
+            <div class="dock-item" onclick="openApp('settings')">⚙️</div>
+        </div>
+    </div>
+
+    <!-- MAIL COMPOSE MODAL -->
+    <div class="mail-compose-modal" id="mailComposeModal">
+        <div class="mail-compose-box">
+            <h2>Nuevo mensaje</h2>
+            <input type="text" id="composeToInput" placeholder="Para:" />
+            <input type="text" id="composeSubjectInput" placeholder="Asunto:" />
+            <textarea id="composeBodyInput" placeholder="Mensaje..."></textarea>
+            <div class="mail-compose-buttons">
+                <button class="mail-btn mail-btn-cancel" onclick="closeMailCompose()">Cancelar</button>
+                <button class="mail-btn mail-btn-send" onclick="sendMailCompose()">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== AUDIO ====================
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(freq, dur, type = 'sine') {
+    try {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+
+        osc.type = type;
+        osc.frequency.value = freq;
+
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+
+        gain.gain.setValueAtTime(0.2, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + dur);
+
+        osc.start();
+        osc.stop(audioContext.currentTime + dur);
+    } catch (e) {}
+}
+function playKeySound() {
+    try {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+
+        osc.type = 'triangle';
+        osc.frequency.value = 700 + Math.random() * 100;
+
+        gain.gain.setValueAtTime(0.08, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+
+        osc.start();
+        osc.stop(audioContext.currentTime + 0.05);
+    } catch (e) {}
+}
+
+
+document.addEventListener('keydown', (e) => {
+    // evitar sonido en teclas especiales largas
+    if (e.key.length === 1 || e.key === 'Backspace') {
+        playKeySound();
+    }
+});
+        // ==================== USER & STORAGE ====================
+        let currentUser = null;
+
+        function generateUserId() {
+            return 'user_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function initUser() {
+            let userId = localStorage.getItem('userId');
+            if (!userId) {
+                userId = generateUserId();
+                localStorage.setItem('userId', userId);
+            }
+            
+            currentUser = {
+                id: userId,
+                username: localStorage.getItem(userId + '_username') || 'Usuario',
+                password: localStorage.getItem(userId + '_password') || '1234',
+                darkMode: localStorage.getItem(userId + '_darkMode') !== 'false',
+                notes: JSON.parse(localStorage.getItem(userId + '_notes')) || [
+                    { id: 1, title: 'Mi Primera Nota', content: 'Bienvenido a Notas 📝\n\nHaz clic en el botón "+" para crear nuevas notas.' }
+                ],
+                messages: JSON.parse(localStorage.getItem(userId + '_messages')) || [],
+                emails: JSON.parse(localStorage.getItem(userId + '_emails')) || [
+                    { from: 'Apple Support', subject: 'Bienvenido a macOS', preview: 'Gracias por usar macOS...' }
+                ]
+            };
+
+            document.getElementById('lockUsername').textContent = currentUser.username;
+            document.getElementById('lockHint').textContent = `Contraseña: ${currentUser.password}`;
+            applyTheme();
+        }
+
+        function saveUser() {
+            localStorage.setItem(currentUser.id + '_username', currentUser.username);
+            localStorage.setItem(currentUser.id + '_password', currentUser.password);
+            localStorage.setItem(currentUser.id + '_darkMode', currentUser.darkMode);
+            localStorage.setItem(currentUser.id + '_notes', JSON.stringify(currentUser.notes));
+            localStorage.setItem(currentUser.id + '_messages', JSON.stringify(currentUser.messages));
+            localStorage.setItem(currentUser.id + '_emails', JSON.stringify(currentUser.emails));
+        }
+
+        function applyTheme() {
+            if (currentUser.darkMode) {
+                document.body.classList.remove('light-mode');
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+                document.body.classList.add('light-mode');
+            }
+        }
+
+        // ==================== LOCK SCREEN ====================
+        const passwordInput = document.getElementById('passwordInput');
+        const lockScreen = document.getElementById('lockScreen');
+        const menuBar = document.getElementById('menuBar');
+        const desktop = document.getElementById('desktop');
+        const passwordError = document.getElementById('passwordError');
+
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const pwd = passwordInput.value;
+                if (pwd === currentUser.password) {
+                    playSound(523.25, 0.1);
+                    setTimeout(() => playSound(659.25, 0.1), 100);
+                    setTimeout(() => playSound(783.99, 0.2), 200);
+                    
+                    setTimeout(() => {
+                        lockScreen.classList.add('hidden');
+                        menuBar.classList.add('visible');
+                        desktop.classList.add('visible');
+                    }, 300);
+                } else {
+                    playSound(300, 0.2);
+                    passwordError.classList.add('show');
+                    passwordInput.value = '';
+                    setTimeout(() => passwordError.classList.remove('show'), 2000);
+                }
+            }
+        });
+
+        // ==================== TIME ====================
+        function updateTime() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('lockTime').textContent = `${h}:${m}`;
+            document.getElementById('time').textContent = `${h}:${m}`;
+
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            const dateStr = now.toLocaleDateString('es-ES', options);
+            document.getElementById('lockDate').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+        }
+
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // ==================== WINDOW MANAGEMENT ====================
+        function bringToFront(win) {
+    let maxZ = 1000;
+    document.querySelectorAll('.window').forEach(w => {
+        maxZ = Math.max(maxZ, parseInt(w.style.zIndex) || 1000);
+    });
+    win.style.zIndex = maxZ + 1;
+}
+
+        let windowCount = 0;
+        const windows = {};
+
+        function createWindow(title, app) {
+            const id = `win-${++windowCount}`;
+            const win = document.createElement('div');
+            win.className = 'window';
+            win.id = id;
+            win.style.left = (50 + windowCount * 30) + 'px';
+            win.style.top = (50 + windowCount * 30) + 'px';
+            win.style.width = '900px';
+            win.style.height = '700px';
+
+            let content = '';
+
+            if (app === 'safari') {
+                content = createSafariContent(id);
+            } else if (app === 'notes') {
+                content = createNotesContent(id);
+            } else if (app === 'mail') {
+                content = createMailContent(id);
+            } else if (app === 'messages') {
+                content = createMessagesContent(id);
+            } else if (app === 'settings') {
+                content = createSettingsContent(id);
+            } else if (app === 'finder') {
+                content = `
+                    <div style="padding: 40px; height: 100%; overflow-y: auto;">
+                        <h1>Finder</h1>
+                        <p>Bienvenido a Finder</p>
+                        <h2>Favoritos</h2>
+                        <ul>
+                            <li>📁 Desktop</li>
+                            <li>📁 Documentos</li>
+                            <li>📁 Descargas</li>
+                            <li>📁 Aplicaciones</li>
+                        </ul>
+                    </div>
+                `;
+            } else {
+                content = `<div style="padding: 40px; text-align: center;"><h2>${app}</h2><p>Contenido de la app...</p></div>`;
+            }
+
+            win.innerHTML = `
+                <div class="window-header" onmousedown="dragWindow(event, '${id}')">
+                    <div class="window-control close" onclick="closeWindow('${id}')"></div>
+                    <div class="window-control minimize" onclick="minimizeWindow('${id}')"></div>
+                    <div class="window-control fullscreen" onclick="maximizeWindow('${id}')"></div>
+                    <div class="window-title">${title}</div>
+                </div>
+                <div class="window-content" id="content-${id}">
+                    ${content}
+                </div>
+            `;
+
+            document.getElementById('desktop').appendChild(win);
+            win.addEventListener('mousedown', () => bringToFront(win));
+            windows[id] = { minimized: false };
+            playSound(600, 0.1);
+        }
+
+        function createSafariContent(id) {
+            return `
+                <div class="safari-container">
+                    <div class="safari-toolbar">
+                        <button class="safari-btn" onclick="safariBack('${id}')">←</button>
+                        <button class="safari-btn" onclick="safariForward('${id}')">→</button>
+                        <button class="safari-btn" onclick="safariRefresh('${id}')">🔄</button>
+                        <input class="safari-url-bar" id="safari-url-${id}" value="https://www.google.com" placeholder="Buscar o ingresa URL" onkeypress="if(event.key==='Enter') searchSafari('${id}')">
+                        <button class="safari-btn" onclick="searchSafari('${id}')">🔍</button>
+                    </div>
+                    <div class="safari-webpage" id="safari-content-${id}">
+                        <h1>🔍 Google</h1>
+                        <p>¿Qué deseas buscar?</p>
+                        <p>Prueba buscando: <strong>Python</strong>, <strong>JavaScript</strong>, <strong>Web Development</strong></p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createNotesContent(id) {
+            let notesHTML = '<ul class="notes-list">';
+            currentUser.notes.forEach((note, index) => {
+                notesHTML += `<li class="notes-item ${index === 0 ? 'active' : ''}" onclick="selectNote(${note.id}, '${id}')">${note.title}</li>`;
+            });
+            notesHTML += '</ul>';
+
+            return `
+                <div class="notes-container">
+                    <div class="notes-sidebar">
+                        ${notesHTML}
+                        <div style="padding: 16px;">
+                            <button class="btn-primary" onclick="createNewNote('${id}')" style="width: 100%;">+ Nueva Nota</button>
+                        </div>
+                    </div>
+                    <div class="notes-content">
+                        <input type="text" id="notes-title-${id}" class="notes-title-input" placeholder="Título..." onchange="saveCurrentNote('${id}')">
+                        <textarea id="notes-text-${id}" placeholder="Escribe aquí..." onchange="saveCurrentNote('${id}')"></textarea>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createMailContent(id) {
+            let mailHTML = '<ul class="mail-list">';
+            currentUser.emails.forEach((email, index) => {
+                mailHTML += `
+                    <li class="mail-item" onclick="selectEmail(${index}, '${id}')">
+                        <div class="mail-from">${email.from}</div>
+                        <div class="mail-subject">${email.subject}</div>
+                    </li>
+                `;
+            });
+            mailHTML += '</ul>';
+
+            return `
+                <div class="mail-container">
+                    <div class="mail-sidebar">
+                        <button class="mail-compose-btn" onclick="openMailCompose()">✏️ Nuevo</button>
+                        <ul class="mail-folders">
+                            <li class="mail-folder active">Inbox</li>
+                            <li class="mail-folder">Enviados</li>
+                            <li class="mail-folder">Borradores</li>
+                            <li class="mail-folder">Papelera</li>
+                        </ul>
+                    </div>
+                    <div class="mail-content">
+                        <h2>Inbox (${currentUser.emails.length})</h2>
+                        ${mailHTML}
+                    </div>
+                </div>
+            `;
+        }
+
+        function createMessagesContent(id) {
+            let messagesHTML = '';
+            currentUser.messages.forEach(msg => {
+                messagesHTML += `<div class="message ${msg.sent ? 'sent' : 'received'}">${msg.text}</div>`;
+            });
+
+            return `
+                <div class="messages-container">
+                    <div class="messages-list" id="messages-list-${id}">
+                        ${messagesHTML}
+                    </div>
+                    <div class="messages-input">
+                        <input type="text" id="messages-input-${id}" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter') sendMessage('${id}')">
+                        <button onclick="sendMessage('${id}')">Enviar</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createSettingsContent(id) {
+            return `
+                <div class="settings-container">
+                    <div class="settings-section">
+                        <div class="settings-title">General</div>
+                        
+                        <div class="settings-item">
+                            <div class="settings-label">Nombre de usuario</div>
+                            <input type="text" id="username-input" class="password-change-input" value="${currentUser.username}" placeholder="Nombre de usuario">
+                        </div>
+
+                        <div class="settings-item">
+                            <div class="settings-label">Cambiar contraseña</div>
+                            <div class="settings-control">
+                                <input type="password" id="new-password-input" class="password-change-input" placeholder="Nueva contraseña">
+                                <button class="btn-primary" onclick="changePassword()">Cambiar</button>
+                            </div>
+                        </div>
+
+                        <div class="settings-item">
+                            <div class="settings-label">Modo oscuro</div>
+                            <button class="toggle-switch ${currentUser.darkMode ? 'active' : ''}" onclick="toggleDarkMode()"></button>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <div class="settings-title">Perfil</div>
+                        <div class="settings-item">
+                            <div class="settings-label">ID de Usuario</div>
+                            <div style="font-size: 12px; color: #999;">${currentUser.id}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function changePassword() {
+            const newPassword = document.getElementById('new-password-input').value;
+            const username = document.getElementById('username-input').value;
+            
+            if (newPassword.length < 4) {
+                showNotification('La contraseña debe tener al menos 4 caracteres');
+                return;
+            }
+
+            currentUser.password = newPassword;
+            currentUser.username = username;
+            saveUser();
+            document.getElementById('lockUsername').textContent = currentUser.username;
+            document.getElementById('lockHint').textContent = `Contraseña: ${currentUser.password}`;
+            showNotification('✅ Contraseña y usuario cambiados correctamente');
+        }
+
+        function toggleDarkMode() {
+            currentUser.darkMode = !currentUser.darkMode;
+            saveUser();
+            applyTheme();
+            playSound(600, 0.1);
+        }
+
+        function closeWindow(id) {
+            document.getElementById(id).remove();
+            delete windows[id];
+        }
+
+        function minimizeWindow(id) {
+    const win = document.getElementById(id);
+    win.style.display = 'none';
+
+    const dock = document.getElementById('dock');
+
+    const mini = document.createElement('div');
+    mini.className = 'dock-item';
+    mini.textContent = '🪟';
+
+    mini.onclick = () => {
+        win.style.display = 'flex';
+        mini.remove();
+    };
+
+    dock.appendChild(mini);
+}
+
+        function maximizeWindow(id) {
+            const win = document.getElementById(id);
+            if (win.style.width === '100vw') {
+                win.style.width = '900px';
+                win.style.height = '700px';
+                win.style.left = '50px';
+                win.style.top = '50px';
+            } else {
+                win.style.width = '100vw';
+                win.style.height = 'calc(100% - 24px)';
+                win.style.left = '0';
+                win.style.top = '24px';
+            }
+        }
+
+        function dragWindow(e, id) {
+            const win = document.getElementById(id);
+            const startX = e.clientX - win.offsetLeft;
+            const startY = e.clientY - win.offsetTop;
+
+            function onMove(ev) {
+                win.style.left = (ev.clientX - startX) + 'px';
+                win.style.top = (ev.clientY - startY) + 'px';
+            }
+
+            function onUp() {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+            }
+
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        }
+
+        // ==================== SAFARI ====================
+        async function searchSafari(id) {
+            const urlBar = document.getElementById(`safari-url-${id}`);
+            const query = urlBar.value;
+            const content = document.getElementById(`safari-content-${id}`);
+            
+            // Mostrar que está cargando
+            content.innerHTML = `<h2>Cargando resultados...</h2>`;
+
+            try {
+                // Usar API de Wikipedia para búsquedas
+                const response = await fetch(`https://en.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(query)}&origin=*`);
+                const data = await response.json();
+
+                let html = `<h1>🔍 Resultados para "${query}"</h1><div class="google-results">`;
+                
+                if (data.query && data.query.search.length > 0) {
+                    data.query.search.forEach(result => {
+                        html += `
+                            <div class="google-result">
+                                <div class="result-url">en.wikipedia.org</div>
+                                <div class="result-title">${result.title}</div>
+                                <div class="result-description">${result.snippet.replace(/<[^>]*>/g, '').substring(0, 150)}...</div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    html += `<p>No se encontraron resultados para "${query}"</p>`;
+                }
+                
+                html += '</div>';
+                content.innerHTML = html;
+            } catch (error) {
+                content.innerHTML = `<h2>Error de conexión</h2><p>No se pudo completar la búsqueda. Intenta de nuevo.</p>`;
+            }
+        }
+
+        function safariBack(id) {
+            playSound(400, 0.05);
+            showNotification('← Atrás');
+        }
+
+        function safariForward(id) {
+            playSound(400, 0.05);
+            showNotification('Adelante →');
+        }
+
+        function safariRefresh(id) {
+            playSound(400, 0.05);
+            const urlBar = document.getElementById(`safari-url-${id}`);
+            searchSafari(id);
+        }
+
+        // ==================== NOTES ====================
+        let currentNoteId = null;
+
+        function selectNote(noteId, windowId) {
+            currentNoteId = noteId;
+            const note = currentUser.notes.find(n => n.id === noteId);
+            document.getElementById(`notes-title-${windowId}`).value = note.title;
+            document.getElementById(`notes-text-${windowId}`).value = note.content;
+            document.querySelectorAll(`#content-${windowId} .notes-item`).forEach(item => item.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function saveCurrentNote(windowId) {
+            if (currentNoteId) {
+                const titleInput = document.getElementById(`notes-title-${windowId}`);
+                const textarea = document.getElementById(`notes-text-${windowId}`);
+                const note = currentUser.notes.find(n => n.id === currentNoteId);
+                note.title = titleInput.value || 'Sin título';
+                note.content = textarea.value;
+                saveUser();
+            }
+        }
+
+        function createNewNote(windowId) {
+            const newId = Math.max(...currentUser.notes.map(n => n.id), 0) + 1;
+            currentUser.notes.push({ id: newId, title: 'Nueva Nota', content: '' });
+            saveUser();
+            location.reload();
+        }
+
+        // ==================== MESSAGES ====================
+        function sendMessage(windowId) {
+            const input = document.getElementById(`messages-input-${windowId}`);
+            const message = input.value.trim();
+            
+            if (message) {
+                const messagesList = document.getElementById(`messages-list-${windowId}`);
+                const msgEl = document.createElement('div');
+                msgEl.className = 'message sent';
+                msgEl.textContent = message;
+                messagesList.appendChild(msgEl);
+                messagesList.scrollTop = messagesList.scrollHeight;
+                
+                currentUser.messages.push({ text: message, sent: true, timestamp: new Date() });
+                saveUser();
+                input.value = '';
+                
+                // Simular respuesta
+                setTimeout(() => {
+                    const responseEl = document.createElement('div');
+                    responseEl.className = 'message received';
+                    const responses = [
+                        '¡Hola! ¿Cómo estás?',
+                        '👍 Está bien',
+                        '¿Qué tal?',
+                        '😄 Jajaja',
+                        'Tiene sentido'
+                    ];
+                    responseEl.textContent = responses[Math.floor(Math.random() * responses.length)];
+                    messagesList.appendChild(responseEl);
+                    messagesList.scrollTop = messagesList.scrollHeight;
+                    currentUser.messages.push({ text: responseEl.textContent, sent: false, timestamp: new Date() });
+                    saveUser();
+                }, 1000 + Math.random() * 2000);
+            }
+        }
+
+        // ==================== MAIL ====================
+        function openMailCompose() {
+            document.getElementById('mailComposeModal').classList.add('show');
+        }
+
+        function closeMailCompose() {
+            document.getElementById('mailComposeModal').classList.remove('show');
+        }
+
+        function sendMailCompose() {
+            const to = document.getElementById('composeToInput').value;
+            const subject = document.getElementById('composeSubjectInput').value;
+            const body = document.getElementById('composeBodyInput').value;
+
+            if (!to || !subject || !body) {
+                showNotification('⚠️ Completa todos los campos');
+                return;
+            }
+
+            currentUser.emails.push({
+                from: currentUser.username,
+                subject: subject,
+                preview: body.substring(0, 50) + '...'
+            });
+
+            saveUser();
+            closeMailCompose();
+            showNotification('✅ Correo enviado');
+
+            document.getElementById('composeToInput').value = '';
+            document.getElementById('composeSubjectInput').value = '';
+            document.getElementById('composeBodyInput').value = '';
+        }
+
+        function selectEmail(index, windowId) {
+            const email = currentUser.emails[index];
+            showNotification(`📧 ${email.from}: ${email.subject}`);
+        }
+
+        // ==================== UTILITIES ====================
+        function openApp(app) {
+            playSound(600, 0.1);
+            const titles = {
+                'finder': '📁 Finder',
+                'safari': '🌐 Safari',
+                'messages': '💬 Mensajes',
+                'mail': '✉️ Correo',
+                'notes': '📝 Notas',
+                'settings': '⚙️ Configuración'
+            };
+            createWindow(titles[app] || app, app);
+        }
+
+        function showNotification(text) {
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.textContent = text;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+const wallpapers = [
+    'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee',
+    'https://images.unsplash.com/photo-1493244040629-496f6d136cc3',
+    'https://images.unsplash.com/photo-1501785888041-af3ef285b470',
+    'https://images.unsplash.com/photo-1470770841072-f978cf4d019e'
+];
+
+function setRandomWallpaper() {
+    const wp = document.getElementById('wallpaper');
+    const random = wallpapers[Math.floor(Math.random() * wallpapers.length)];
+    wp.style.backgroundImage = `url(${random})`;
+}
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            initUser();
+            passwordInput.focus();
+            setRandomWallpaper();
+        });
+        document.addEventListener('keydown', (e) => {
+    if (e.key.length === 1 || e.key === 'Backspace') {
+        playKeySound();
+    }
+});
+    </script>
+
+</body>
+</html>
