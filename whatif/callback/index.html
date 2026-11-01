@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connected · What If 3D Studio</title>
+<link rel="icon" href="../icon-256.png">
+<link rel="stylesheet" href="../style.css">
+<script src="../config.js"></script>
+</head>
+<body>
+<header>
+  <a href="../"><img src="../icon-256.png" alt="What If 3D Studio icon"></a>
+  <div class="name">What If 3D Studio</div>
+  <nav><a href="../terms.html">Terms</a><a href="../privacy.html">Privacy</a></nav>
+</header>
+<main class="doc">
+  <h1 id="title">Connecting…</h1>
+  <p id="msg" class="lead"></p>
+  <div id="next" style="display:none">
+    <h2>Last step (owner only)</h2>
+    <p>Open <b>Terminal</b> on your computer and paste this command. It asks for your app's <b>Client Secret</b> (hidden while you type — it never leaves your computer except to go to TikTok), exchanges the one-time code, and prints a <b>refresh token</b>.</p>
+    <pre id="cmd"></pre>
+    <button class="btn secondary" id="copy">Copy command</button>
+    <p>Then save the printed <code>refresh_token</code> as a secret in the Studio's environment settings. The one-time code on this page expires quickly, so run the command right away.</p>
+  </div>
+</main>
+<footer>© 2026 What If 3D Studio · <a href="../terms.html">Terms of Service</a> · <a href="../privacy.html">Privacy Policy</a></footer>
+<script>
+  const q = new URLSearchParams(location.search), c = window.WHATIF_CONFIG;
+  const title = document.getElementById('title'), msg = document.getElementById('msg');
+  const shq = s => "'" + String(s).replace(/'/g, "'\\''") + "'";
+  if (q.get('error')) {
+    title.textContent = 'Not connected'; title.className = 'err';
+    msg.textContent = 'TikTok returned: ' + (q.get('error_description') || q.get('error')) + '. You can close this page and try again.';
+  } else if (q.get('code')) {
+    const saved = sessionStorage.getItem('whatif_state');
+    if (saved && q.get('state') && saved !== q.get('state')) {
+      title.textContent = 'Not connected'; title.className = 'err';
+      msg.textContent = 'The security check did not match. Please start again from the home page.';
+    } else {
+      title.textContent = 'TikTok account connected ✓'; title.className = 'ok';
+      msg.textContent = 'Thanks! Finished videos will arrive in your TikTok inbox as drafts for you to review.';
+      const cmd = 'read -s -p "Client Secret: " TT_SECRET; echo; curl -s -X POST https://open.tiktokapis.com/v2/oauth/token/ ' +
+        '-H "Content-Type: application/x-www-form-urlencoded" ' +
+        '--data-urlencode ' + shq('client_key=' + c.clientKey) + ' ' +
+        '--data-urlencode "client_secret=$TT_SECRET" ' +
+        '--data-urlencode ' + shq('code=' + q.get('code')) + ' ' +
+        '--data-urlencode grant_type=authorization_code ' +
+        '--data-urlencode ' + shq('redirect_uri=' + c.redirectUri) + '; echo; unset TT_SECRET';
+      document.getElementById('cmd').textContent = cmd;
+      document.getElementById('next').style.display = 'block';
+      document.getElementById('copy').onclick = () => navigator.clipboard.writeText(cmd).then(() => { document.getElementById('copy').textContent = 'Copied ✓'; });
+    }
+  } else {
+    title.textContent = 'Nothing to do here';
+    msg.innerHTML = 'This page is where TikTok returns after you connect. <a href="../">Go to the home page</a>.';
+  }
+</script>
+</body>
+</html>

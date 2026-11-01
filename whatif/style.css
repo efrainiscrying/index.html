@@ -1,0 +1,28 @@
+:root { --bg: #0b1220; --card: #121b2e; --text: #e8eef8; --muted: #9fb0c8; --accent: #6fe3ff; --line: #22314d; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; background: var(--bg); color: var(--text); }
+a { color: var(--accent); }
+header { display: flex; align-items: center; gap: 14px; max-width: 960px; margin: 0 auto; padding: 22px 20px; }
+header img { width: 44px; height: 44px; border-radius: 10px; }
+header .name { font-weight: 800; font-size: 18px; }
+header nav { margin-left: auto; display: flex; gap: 18px; font-size: 15px; }
+header nav a { color: var(--muted); text-decoration: none; }
+main { max-width: 960px; margin: 0 auto; padding: 10px 20px 60px; }
+h1 { font-size: clamp(32px, 6vw, 54px); line-height: 1.1; margin: 30px 0 14px; letter-spacing: -0.02em; }
+h1 span { color: var(--accent); }
+h2 { margin-top: 38px; font-size: 22px; }
+.lead { color: var(--muted); font-size: 19px; max-width: 640px; }
+.btn { display: inline-flex; align-items: center; gap: 10px; background: #fe2c55; color: #fff; padding: 14px 22px; border-radius: 12px; font-weight: 700; text-decoration: none; margin: 18px 0; border: 0; font-size: 16px; cursor: pointer; }
+.btn.secondary { background: var(--card); color: var(--text); border: 1px solid var(--line); }
+.frames { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 30px 0; }
+.frames img { width: 100%; border-radius: 14px; border: 1px solid var(--line); aspect-ratio: 9/16; object-fit: cover; }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+.card b { display: block; margin-bottom: 6px; }
+.card p { margin: 0; color: var(--muted); font-size: 15px; }
+footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; padding: 24px 20px; text-align: center; }
+.doc { max-width: 760px; }
+.doc p, .doc li { color: #cdd8ea; }
+pre { background: #060a12; border: 1px solid var(--line); border-radius: 10px; padding: 14px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; font-size: 13px; }
+.ok { color: #7cffb2; }
+.err { color: #ff7a7a; }

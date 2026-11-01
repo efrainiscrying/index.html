@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What If 3D Studio</title>
+<meta name="description" content="Original 3D animated 'what if' short videos, made entirely with code.">
+<link rel="icon" href="icon-256.png">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<header>
+  <img src="icon-256.png" alt="What If 3D Studio icon">
+  <div class="name">What If 3D Studio</div>
+  <nav><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a></nav>
+</header>
+<main>
+  <h1>Original 3D <span>"what if"</span> videos, made with code.</h1>
+  <p class="lead">What If 3D Studio renders animated short videos about impossible questions — what if gravity switched off for five seconds? — and sends each finished video to the creator's TikTok inbox as a draft, so the creator reviews it and decides whether to publish.</p>
+  <a class="btn" id="connect" href="#">Connect with TikTok</a>
+  <p id="connect-note" class="lead" style="font-size:14px"></p>
+
+  <div class="frames">
+    <img src="frame-beach.jpg" alt="A crowded beach before gravity switches off">
+    <img src="frame-chaos.jpg" alt="People, umbrellas and the ocean floating in the air">
+    <img src="frame-colada.jpg" alt="The only survivor: a piña colada">
+  </div>
+
+  <h2>How it works</h2>
+  <div class="steps">
+    <div class="card"><b>1. Connect</b><p>The creator signs in with TikTok (Login Kit) and authorizes uploading drafts.</p></div>
+    <div class="card"><b>2. Render</b><p>Each video is scripted, voiced, animated in 3D and rendered from code — 1080×1920, over 60 seconds.</p></div>
+    <div class="card"><b>3. Draft to inbox</b><p>The finished video is uploaded to the creator's TikTok inbox as a draft (Content Posting API, upload mode).</p></div>
+    <div class="card"><b>4. Creator decides</b><p>The creator opens the notification in TikTok, edits the caption and privacy, and publishes — or not.</p></div>
+  </div>
+  <p class="lead" style="font-size:15px;margin-top:24px">The studio never publishes on its own. Nothing goes live without the creator tapping "Post" in the TikTok app.</p>
+</main>
+<footer>© 2026 What If 3D Studio · <a href="terms.html">Terms of Service</a> · <a href="privacy.html">Privacy Policy</a></footer>
+<script>
+  const c = window.WHATIF_CONFIG, a = document.getElementById('connect'), note = document.getElementById('connect-note');
+  if (!c.clientKey) { a.classList.add('secondary'); note.textContent = 'TikTok connection is being set up.'; a.removeAttribute('href'); }
+  else {
+    const state = Math.random().toString(36).slice(2);
+    sessionStorage.setItem('whatif_state', state);
+    a.href = 'https://www.tiktok.com/v2/auth/authorize/?' + new URLSearchParams({ client_key: c.clientKey, scope: c.scopes, response_type: 'code', redirect_uri: c.redirectUri, state });
+  }
+</script>
+</body>
+</html>
