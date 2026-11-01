@@ -19,10 +19,10 @@
   <p id="msg" class="lead"></p>
   <div id="next" style="display:none">
     <h2>Last step (owner only)</h2>
-    <p>Open <b>Terminal</b> on your computer and paste this command. It asks for your app's <b>Client Secret</b> (hidden while you type — it never leaves your computer except to go to TikTok), exchanges the one-time code, and prints a <b>refresh token</b>.</p>
+    <p>Open <b>Terminal</b> on your computer and paste this command. It asks for your app's <b>Client Secret</b> (hidden while you type — it never leaves your computer except to go to TikTok), exchanges the one-time code, and copies the <b>refresh token</b> to your clipboard without showing it.</p>
     <pre id="cmd"></pre>
     <button class="btn secondary" id="copy">Copy command</button>
-    <p>Then save the printed <code>refresh_token</code> as a secret in the Studio's environment settings. The one-time code on this page expires quickly, so run the command right away.</p>
+    <p>Then paste it (⌘V) as the <code>refresh_token</code> secret in the Studio's environment settings. The one-time code on this page expires quickly, so run the command right away.</p>
   </div>
 </main>
 <footer>© 2026 What If 3D Studio · <a href="../terms.html">Terms of Service</a> · <a href="../privacy.html">Privacy Policy</a></footer>
@@ -41,13 +41,21 @@
     } else {
       title.textContent = 'TikTok account connected ✓'; title.className = 'ok';
       msg.textContent = 'Thanks! Finished videos will arrive in your TikTok inbox as drafts for you to review.';
-      const cmd = 'read -s -p "Client Secret: " TT_SECRET; echo; curl -s -X POST https://open.tiktokapis.com/v2/oauth/token/ ' +
+      // Funciona en zsh y bash (Terminal de Mac). El Client Secret se escribe oculto; el refresh token
+      // se copia al portapapeles con pbcopy y nunca se imprime en pantalla.
+      const cmd = "printf 'Client Secret: '; read -rs TT_SECRET; echo; " +
+        'TT_RESP=$(curl -s -X POST https://open.tiktokapis.com/v2/oauth/token/ ' +
         '-H "Content-Type: application/x-www-form-urlencoded" ' +
         '--data-urlencode ' + shq('client_key=' + c.clientKey) + ' ' +
         '--data-urlencode "client_secret=$TT_SECRET" ' +
         '--data-urlencode ' + shq('code=' + q.get('code')) + ' ' +
         '--data-urlencode grant_type=authorization_code ' +
-        '--data-urlencode ' + shq('redirect_uri=' + c.redirectUri) + '; echo; unset TT_SECRET';
+        '--data-urlencode ' + shq('redirect_uri=' + c.redirectUri) + '); unset TT_SECRET; ' +
+        "if echo \"$TT_RESP\" | grep -q '\"refresh_token\"'; then " +
+        "echo \"$TT_RESP\" | sed -n 's/.*\"refresh_token\":\"\\([^\"]*\\)\".*/\\1/p' | tr -d '\\n' | pbcopy; " +
+        "echo 'OK: the refresh token is now in your clipboard (it is not shown here).'; " +
+        "echo \"$TT_RESP\" | sed -n 's/.*\"scope\":\"\\([^\"]*\\)\".*/scopes: \\1/p'; " +
+        "else echo 'ERROR:'; echo \"$TT_RESP\" | sed -E 's/\"(access_token|refresh_token)\":\"[^\"]*\"/\"\\1\":\"***\"/g'; fi; unset TT_RESP";
       document.getElementById('cmd').textContent = cmd;
       document.getElementById('next').style.display = 'block';
       document.getElementById('copy').onclick = () => navigator.clipboard.writeText(cmd).then(() => { document.getElementById('copy').textContent = 'Copied ✓'; });
