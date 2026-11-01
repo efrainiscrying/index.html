@@ -2,7 +2,7 @@
 (function () {
   const base = new URL('.', document.currentScript.src).href;   // .../whatif/
   window.WHATIF_CONFIG = {
-    clientKey: '',   // se llena cuando TikTok entregue el Client Key
+    clientKey: 'sbawrjhyo444g3foje',   // Client key del Sandbox (público). Cambiar por el de Production cuando TikTok apruebe la app.
     scopes: 'user.info.basic,video.upload',
     redirectUri: base + 'callback/',
   };
